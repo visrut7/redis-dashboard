@@ -8,23 +8,29 @@ export async function GET(request: NextRequest) {
     const redis = getRedisClient();
 
     // Use SCAN instead of KEYS for better performance with large datasets
-    let keys = [];
+    let allKeys: string[] = [];
     let cursor = "0";
+    const pattern = searchTerm ? `*${searchTerm}*` : "*";
+    const scanCount = 5; // Number of keys to attempt to retrieve in each scan
 
-    // Only do one SCAN iteration to get a sample of keys
-    const reply = await redis.scan(
-      cursor,
-      "MATCH",
-      searchTerm ? `*${searchTerm}*` : "*",
-      "COUNT",
-      "5"
-    );
+    // Continue scanning until we have at least 5 keys or there are no more keys
+    do {
+      const reply = await redis.scan(
+        cursor,
+        "MATCH",
+        pattern,
+        "COUNT",
+        scanCount.toString()
+      );
 
-    cursor = reply[0];
-    keys = reply[1];
+      cursor = reply[0];
+      allKeys = [...allKeys, ...reply[1]];
 
-    // Limit to 10 keys for display
-    const limitedKeys = keys.slice(0, 10);
+      // If we have enough keys or reached the end of dataset (cursor = '0'), stop scanning
+    } while (cursor !== "0" && allKeys.length < 5);
+
+    // Limit to 5 keys for display
+    const limitedKeys = allKeys.slice(0, 5);
 
     return NextResponse.json({
       success: true,

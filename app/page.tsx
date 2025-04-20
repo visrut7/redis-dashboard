@@ -2,6 +2,22 @@
 
 import { useState, useEffect } from "react";
 
+// Dracula theme colors
+const colors = {
+  background: "#282a36",
+  currentLine: "#44475a",
+  selection: "#44475a",
+  foreground: "#f8f8f2",
+  comment: "#6272a4",
+  cyan: "#8be9fd",
+  green: "#50fa7b",
+  orange: "#ffb86c",
+  pink: "#ff79c6",
+  purple: "#bd93f9",
+  red: "#ff5555",
+  yellow: "#f1fa8c",
+};
+
 export default function Home() {
   const [keys, setKeys] = useState<string[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
@@ -82,11 +98,21 @@ export default function Home() {
   const displayKeys = keys.slice(0, 10);
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Redis Studio</h1>
+    <div className="min-h-screen p-8 max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6" style={{ color: colors.purple }}>
+        Redis Studio
+      </h1>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div
+          className="px-4 py-3 rounded mb-4"
+          style={{
+            backgroundColor: `${colors.red}20`,
+            borderColor: colors.red,
+            border: "1px solid",
+            color: colors.foreground,
+          }}
+        >
           {error}
         </div>
       )}
@@ -95,60 +121,100 @@ export default function Home() {
         <input
           type="text"
           placeholder="Search keys..."
-          className="flex-1 px-4 py-2 border border-gray-300 rounded"
+          className="flex-1 px-4 py-2 rounded"
+          style={{
+            backgroundColor: colors.currentLine,
+            borderColor: colors.comment,
+            border: "1px solid",
+            color: colors.foreground,
+          }}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
         />
         <button
           onClick={handleSearch}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="px-6 py-2 rounded"
+          style={{
+            backgroundColor: colors.purple,
+            color: colors.background,
+          }}
         >
           Search
         </button>
       </div>
 
       {loading ? (
-        <div className="text-center py-8">Loading...</div>
+        <div className="text-center py-8" style={{ color: colors.comment }}>
+          Loading...
+        </div>
       ) : (
-        <div className="border rounded overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div
+          className="rounded overflow-hidden"
+          style={{ border: `1px solid ${colors.currentLine}` }}
+        >
+          <table className="min-w-full">
+            <thead style={{ backgroundColor: colors.currentLine }}>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{ color: colors.comment }}
+                >
                   Key
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{ color: colors.comment }}
+                >
                   Value
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{ color: colors.comment }}
+                >
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody style={{ backgroundColor: colors.background }}>
               {displayKeys.length === 0 ? (
                 <tr>
                   <td
                     colSpan={3}
-                    className="px-6 py-4 text-center text-gray-500"
+                    className="px-6 py-4 text-center"
+                    style={{ color: colors.comment }}
                   >
                     No keys found
                   </td>
                 </tr>
               ) : (
                 displayKeys.map((key) => (
-                  <tr key={key}>
-                    <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
+                  <tr
+                    key={key}
+                    className="hover-row"
+                    style={{
+                      borderTop: `1px solid ${colors.currentLine}`,
+                    }}
+                  >
+                    <td
+                      className="px-6 py-4 whitespace-nowrap font-mono text-sm"
+                      style={{ color: colors.cyan }}
+                    >
                       {key}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap font-mono text-sm overflow-hidden text-ellipsis max-w-xs">
+                    <td
+                      className="px-6 py-4 whitespace-nowrap font-mono text-sm overflow-hidden text-ellipsis max-w-xs"
+                      style={{ color: colors.green }}
+                    >
                       {values[key] || "Loading..."}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => handleDelete(key)}
-                        className="text-red-600 hover:text-red-900"
+                        className="delete-button"
+                        style={{
+                          color: colors.red,
+                        }}
                       >
                         Delete
                       </button>

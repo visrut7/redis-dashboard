@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Redis Studio",
-  description: "Redis Studio",
+  description: "A simple Redis dashboard with Dracula theme",
 };
 
 export default function RootLayout({
@@ -26,6 +26,10 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={{
+          backgroundColor: "#282a36",
+          color: "#f8f8f2",
+        }}
       >
         {children}
       </body>

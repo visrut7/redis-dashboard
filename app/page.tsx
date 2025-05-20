@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 
 // Dracula theme colors
 const colors = {
@@ -27,10 +28,15 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
-    fetchKeys();
-  }, []);
+    // Get search term from URL on initial load
+    const searchFromUrl = searchParams.get("search") || "";
+    setSearchTerm(searchFromUrl);
+    fetchKeys(searchFromUrl);
+  }, [searchParams]);
 
   const fetchKeys = async (search = "") => {
     setLoading(true);
@@ -69,6 +75,14 @@ export default function Home() {
   };
 
   const handleSearch = () => {
+    // Update URL with search term
+    const params = new URLSearchParams(searchParams.toString());
+    if (searchTerm) {
+      params.set("search", searchTerm);
+    } else {
+      params.delete("search");
+    }
+    router.push(`?${params.toString()}`);
     fetchKeys(searchTerm);
   };
 

@@ -19,6 +19,8 @@ const colors = {
   yellow: "#f1fa8c",
 };
 
+const LIMIT_OPTIONS = [10, 20, 30, 40, 50];
+
 export default function Home() {
   const [keys, setKeys] = useState<string[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
@@ -28,22 +30,25 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
+  const [limit, setLimit] = useState(10);
   const searchParams = useSearchParams();
   const router = useRouter();
 
   useEffect(() => {
-    // Get search term from URL on initial load
+    // Get search term and limit from URL on initial load
     const searchFromUrl = searchParams.get("search") || "";
+    const limitFromUrl = searchParams.get("limit") || "10";
     setSearchTerm(searchFromUrl);
-    fetchKeys(searchFromUrl);
+    setLimit(parseInt(limitFromUrl));
+    fetchKeys(searchFromUrl, parseInt(limitFromUrl));
   }, [searchParams]);
 
-  const fetchKeys = async (search = "") => {
+  const fetchKeys = async (search = "", limit = 10) => {
     setLoading(true);
     try {
       const url = search
-        ? `/api/redis/keys?search=${encodeURIComponent(search)}`
-        : "/api/redis/keys";
+        ? `/api/redis/keys?search=${encodeURIComponent(search)}&limit=${limit}`
+        : `/api/redis/keys?limit=${limit}`;
 
       const response = await fetch(url);
       const data = await response.json();
@@ -75,15 +80,25 @@ export default function Home() {
   };
 
   const handleSearch = () => {
-    // Update URL with search term
+    // Update URL with search term and limit
     const params = new URLSearchParams(searchParams.toString());
     if (searchTerm) {
       params.set("search", searchTerm);
     } else {
       params.delete("search");
     }
+    params.set("limit", limit.toString());
     router.push(`?${params.toString()}`);
-    fetchKeys(searchTerm);
+    fetchKeys(searchTerm, limit);
+  };
+
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    // Update URL and fetch with new limit
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("limit", newLimit.toString());
+    router.push(`?${params.toString()}`);
+    fetchKeys(searchTerm, newLimit);
   };
 
   const handleDelete = async (key: string) => {
@@ -139,9 +154,6 @@ export default function Home() {
     }
   };
 
-  // No need for client-side filtering since we're now filtering on the server
-  const displayKeys = keys.slice(0, 10);
-
   return (
     <div className="min-h-screen p-8 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold mb-6" style={{ color: colors.purple }}>
@@ -177,6 +189,23 @@ export default function Home() {
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
         />
+        <select
+          value={limit}
+          onChange={(e) => handleLimitChange(parseInt(e.target.value))}
+          className="px-4 py-2 rounded"
+          style={{
+            backgroundColor: colors.currentLine,
+            borderColor: colors.comment,
+            border: "1px solid",
+            color: colors.foreground,
+          }}
+        >
+          {LIMIT_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option} keys
+            </option>
+          ))}
+        </select>
         <button
           onClick={handleSearch}
           className="px-6 py-2 rounded"
@@ -215,6 +244,12 @@ export default function Home() {
                   className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
                   style={{ color: colors.comment }}
                 >
+                  #
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{ color: colors.comment }}
+                >
                   Key
                 </th>
                 <th
@@ -232,10 +267,10 @@ export default function Home() {
               </tr>
             </thead>
             <tbody style={{ backgroundColor: colors.background }}>
-              {displayKeys.length === 0 ? (
+              {keys.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={3}
+                    colSpan={4}
                     className="px-6 py-4 text-center"
                     style={{ color: colors.comment }}
                   >
@@ -243,7 +278,7 @@ export default function Home() {
                   </td>
                 </tr>
               ) : (
-                displayKeys.map((key) => (
+                keys.map((key, index) => (
                   <tr
                     key={key}
                     className="hover-row"
@@ -251,6 +286,12 @@ export default function Home() {
                       borderTop: `1px solid ${colors.currentLine}`,
                     }}
                   >
+                    <td
+                      className="px-6 py-4 whitespace-nowrap font-mono text-sm"
+                      style={{ color: colors.comment }}
+                    >
+                      {index + 1}
+                    </td>
                     <td
                       className="px-6 py-4 whitespace-nowrap font-mono text-sm"
                       style={{ color: colors.cyan }}

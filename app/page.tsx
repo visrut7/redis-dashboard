@@ -24,6 +24,9 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newKey, setNewKey] = useState("");
+  const [newValue, setNewValue] = useState("");
 
   useEffect(() => {
     fetchKeys();
@@ -94,6 +97,34 @@ export default function Home() {
     }
   };
 
+  const handleAddKeyValue = async () => {
+    try {
+      const response = await fetch("/api/redis/set", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ key: newKey, value: newValue }),
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        // Add the new key-value pair to state
+        setKeys([...keys, newKey]);
+        setValues({ ...values, [newKey]: newValue });
+        // Reset form and close modal
+        setNewKey("");
+        setNewValue("");
+        setIsModalOpen(false);
+      } else {
+        setError(data.error || "Failed to add key-value pair");
+      }
+    } catch (err) {
+      setError("Error adding key-value pair");
+      console.error(err);
+    }
+  };
+
   // No need for client-side filtering since we're now filtering on the server
   const displayKeys = keys.slice(0, 10);
 
@@ -141,6 +172,16 @@ export default function Home() {
           }}
         >
           Search
+        </button>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-6 py-2 rounded"
+          style={{
+            backgroundColor: colors.green,
+            color: colors.background,
+          }}
+        >
+          Add New
         </button>
       </div>
 
@@ -224,6 +265,90 @@ export default function Home() {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 bg-opacity-30 flex items-center justify-center backdrop-blur-sm"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="bg-[#282a36] p-6 rounded-lg w-96"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2
+              className="text-xl font-bold mb-4"
+              style={{ color: colors.purple }}
+            >
+              Add New Key-Value Pair
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label
+                  className="block mb-2"
+                  style={{ color: colors.foreground }}
+                >
+                  Key
+                </label>
+                <input
+                  type="text"
+                  value={newKey}
+                  onChange={(e) => setNewKey(e.target.value)}
+                  className="w-full px-4 py-2 rounded"
+                  style={{
+                    backgroundColor: colors.currentLine,
+                    borderColor: colors.comment,
+                    border: "1px solid",
+                    color: colors.foreground,
+                  }}
+                />
+              </div>
+              <div>
+                <label
+                  className="block mb-2"
+                  style={{ color: colors.foreground }}
+                >
+                  Value
+                </label>
+                <input
+                  type="text"
+                  value={newValue}
+                  onChange={(e) => setNewValue(e.target.value)}
+                  className="w-full px-4 py-2 rounded"
+                  style={{
+                    backgroundColor: colors.currentLine,
+                    borderColor: colors.comment,
+                    border: "1px solid",
+                    color: colors.foreground,
+                  }}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded"
+                  style={{
+                    backgroundColor: colors.currentLine,
+                    color: colors.foreground,
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddKeyValue}
+                  className="px-4 py-2 rounded"
+                  style={{
+                    backgroundColor: colors.green,
+                    color: colors.background,
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

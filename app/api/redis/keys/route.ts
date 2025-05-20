@@ -11,9 +11,9 @@ export async function GET(request: NextRequest) {
     let allKeys: string[] = [];
     let cursor = "0";
     const pattern = searchTerm ? `*${searchTerm}*` : "*";
-    const scanCount = 5; // Number of keys to attempt to retrieve in each scan
+    const scanCount = 10; // Number of keys to attempt to retrieve in each scan
 
-    // Continue scanning until we have at least 5 keys or there are no more keys
+    // Continue scanning until we have at least 10 keys or there are no more keys
     do {
       const reply = await redis.scan(
         cursor,
@@ -27,10 +27,10 @@ export async function GET(request: NextRequest) {
       allKeys = [...allKeys, ...reply[1]];
 
       // If we have enough keys or reached the end of dataset (cursor = '0'), stop scanning
-    } while (cursor !== "0" && allKeys.length < 5);
+    } while (cursor !== "0" && allKeys.length < 10);
 
-    // Limit to 5 keys for display
-    const limitedKeys = allKeys.slice(0, 5);
+    // Limit to 10 keys for display
+    const limitedKeys = allKeys.slice(0, 10);
 
     return NextResponse.json({
       success: true,

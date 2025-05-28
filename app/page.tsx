@@ -164,6 +164,12 @@ export default function Home() {
     setIsEditModalOpen(true);
   };
 
+  const handleCopy = (key: string) => {
+    setNewKey(key);
+    setNewValue(values[key] || "");
+    setIsModalOpen(true);
+  };
+
   const handleUpdateKeyValue = async () => {
     try {
       const response = await fetch("/api/redis/set", {
@@ -343,6 +349,15 @@ export default function Home() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
+                        onClick={() => handleCopy(key)}
+                        className="mr-3"
+                        style={{
+                          color: colors.cyan,
+                        }}
+                      >
+                        Copy
+                      </button>
+                      <button
                         onClick={() => handleEdit(key)}
                         className="mr-3"
                         style={{
@@ -376,7 +391,7 @@ export default function Home() {
           onClick={() => setIsModalOpen(false)}
         >
           <div
-            className="bg-[#282a36] p-6 rounded-lg w-96"
+            className="bg-[#282a36] p-6 rounded-lg w-[800px] h-[400px]"
             onClick={(e) => e.stopPropagation()}
           >
             <h2
@@ -460,7 +475,7 @@ export default function Home() {
           onClick={() => setIsEditModalOpen(false)}
         >
           <div
-            className="bg-[#282a36] p-6 rounded-lg w-96"
+            className="bg-[#282a36] p-6 rounded-lg w-[800px]h-[400px]"
             onClick={(e) => e.stopPropagation()}
           >
             <h2

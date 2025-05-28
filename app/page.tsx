@@ -31,6 +31,10 @@ export default function Home() {
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
   const [limit, setLimit] = useState(10);
+  // Edit modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editKey, setEditKey] = useState("");
+  const [editValue, setEditValue] = useState("");
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -150,6 +154,39 @@ export default function Home() {
       }
     } catch (err) {
       setError("Error adding key-value pair");
+      console.error(err);
+    }
+  };
+
+  const handleEdit = (key: string) => {
+    setEditKey(key);
+    setEditValue(values[key] || "");
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateKeyValue = async () => {
+    try {
+      const response = await fetch("/api/redis/set", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ key: editKey, value: editValue }),
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        // Update the value in state
+        setValues({ ...values, [editKey]: editValue });
+        // Reset form and close modal
+        setEditKey("");
+        setEditValue("");
+        setIsEditModalOpen(false);
+      } else {
+        setError(data.error || "Failed to update key-value pair");
+      }
+    } catch (err) {
+      setError("Error updating key-value pair");
       console.error(err);
     }
   };
@@ -306,6 +343,15 @@ export default function Home() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
+                        onClick={() => handleEdit(key)}
+                        className="mr-3"
+                        style={{
+                          color: colors.orange,
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
                         onClick={() => handleDelete(key)}
                         className="delete-button"
                         style={{
@@ -400,6 +446,90 @@ export default function Home() {
                   }}
                 >
                   Add
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-opacity-30 flex items-center justify-center backdrop-blur-sm"
+          onClick={() => setIsEditModalOpen(false)}
+        >
+          <div
+            className="bg-[#282a36] p-6 rounded-lg w-96"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2
+              className="text-xl font-bold mb-4"
+              style={{ color: colors.purple }}
+            >
+              Edit Key-Value Pair
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label
+                  className="block mb-2"
+                  style={{ color: colors.foreground }}
+                >
+                  Key
+                </label>
+                <input
+                  type="text"
+                  value={editKey}
+                  disabled
+                  className="w-full px-4 py-2 rounded opacity-50"
+                  style={{
+                    backgroundColor: colors.currentLine,
+                    borderColor: colors.comment,
+                    border: "1px solid",
+                    color: colors.foreground,
+                  }}
+                />
+              </div>
+              <div>
+                <label
+                  className="block mb-2"
+                  style={{ color: colors.foreground }}
+                >
+                  Value
+                </label>
+                <input
+                  type="text"
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="w-full px-4 py-2 rounded"
+                  style={{
+                    backgroundColor: colors.currentLine,
+                    borderColor: colors.comment,
+                    border: "1px solid",
+                    color: colors.foreground,
+                  }}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 rounded"
+                  style={{
+                    backgroundColor: colors.currentLine,
+                    color: colors.foreground,
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateKeyValue}
+                  className="px-4 py-2 rounded"
+                  style={{
+                    backgroundColor: colors.orange,
+                    color: colors.background,
+                  }}
+                >
+                  Update
                 </button>
               </div>
             </div>
